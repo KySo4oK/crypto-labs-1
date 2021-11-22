@@ -28,12 +28,13 @@ public class App {
 
         String text = fromHex(data);
 
-        System.out.println(frequencyMax(text));
+        String x = frequencyMax(text);
+        System.out.println(x);
 
-        tryw1(text);
+        tryw1(text, x);
     }
 
-    public static double frequencyMax(String text) {
+    public static String frequencyMax(String text) {
         List<String> symbols = getSymbols(text);
         HashMap<String, Integer> frequency = new HashMap<>();
 
@@ -50,7 +51,8 @@ public class App {
                 .map(Map.Entry::getKey).collect(Collectors.toList());
 
         System.out.println(collect + " " +  max.get());
-        return max.map(v -> ((double) v)/symbols.size()).orElse(0.0);
+//        return max.map(v -> ((double) v)/symbols.size()).orElse(0.0);
+        return collect.get(0);
     }
 
     private static List<String> getSymbols(String text) {
@@ -67,11 +69,11 @@ public class App {
         return x;
     }
 
-    private static void tryw1(String d) {
+    private static void tryw1(String d, String x) {
         System.out.println(d);
-        String key = xor(String.valueOf(d.charAt(0)), String.valueOf(d.charAt(1)));
-        System.out.println("key - " + key);
-
+//        String key = xor(String.valueOf(d.charAt(0)), String.valueOf(d.charAt(1)));
+        String key = xor(" ", x);
+        System.out.println(key);
         List<String> elements = getSymbols(d);
 
         Map<String, String> toReplace = new HashMap<>();
@@ -86,7 +88,7 @@ public class App {
         }
 
         String result = elements.stream()
-                .map(toReplace::get)
+                .map(el -> Optional.ofNullable(toReplace.get(el)).orElse(el))
                 .collect(Collectors.joining());
 
         System.out.println(result);
