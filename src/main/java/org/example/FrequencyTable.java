@@ -41,8 +41,6 @@ public class FrequencyTable {
 
     public double biggestFrequency() {
         Optional<Integer> max = getBiggestNumbersOfOccur();
-        List<String> collect = frequency.entrySet().stream().filter(stringIntegerEntry -> stringIntegerEntry.getValue().equals(max.get()))
-                .map(Map.Entry::getKey).collect(Collectors.toList());
 
         return max.map(v -> ((double) v)/text.length()).orElse(0.0);
     }

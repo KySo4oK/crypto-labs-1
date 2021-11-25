@@ -7,9 +7,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class App {
-    static List<String> alphabet = getAllSymbols();
+    static List<String> allSymbols = getAllSymbols();
+    static List<String> alphabet = getResultSymbols();
+    static int countMax = 0;
+    static List<String> results = new ArrayList<>();
+
+    private static List<String> getResultSymbols() {
+        return new ArrayList<>(getSymbols("abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+    }
 
     public static List<String> getAllSymbols() {
         List<String> strings = IntStream.range(32, 128)
@@ -27,6 +35,139 @@ public class App {
 
     private static void task2() {
         String data = "G0IFOFVMLRAPI1QJbEQDbFEYOFEPJxAfI10JbEMFIUAAKRAfOVIfOFkYOUQFI15ML1kcJFUeYhA4IxAeKVQZL1VMOFgJbFMDIUAAKUgFOElMI1ZMOFgFPxADIlVMO1VMO1kAIBAZP1VMI14ANRAZPEAJPlMNP1VMIFUYOFUePxxMP19MOFgJbFsJNUMcLVMJbFkfbF8CIElMfgZNbGQDbFcJOBAYJFkfbF8CKRAeJVcEOBANOUQDIVEYJVMNIFwVbEkDORAbJVwAbEAeI1INLlwVbF4JKVRMOF9MOUMJbEMDIVVMP18eOBADKhALKV4JOFkPbFEAK18eJUQEIRBEO1gFL1hMO18eJ1UIbEQEKRAOKUMYbFwNP0RMNVUNPhlAbEMFIUUALUQJKBANIl4JLVwFIldMI0JMK0INKFkJIkRMKFUfL1UCOB5MH1UeJV8ZP1wVYBAbPlkYKRAFOBAeJVcEOBACI0dAbEkDORAbJVwAbF4JKVRMJURMOF9MKFUPJUAEKUJMOFgJbF4JNERMI14JbFEfbEcJIFxCbHIJLUJMJV5MIVkCKBxMOFgJPlVLPxACIxAfPFEPKUNCbDoEOEQcPwpDY1QDL0NCK18DK1wJYlMDIR8II1MZIVUCOB8IYwEkFQcoIB1ZJUQ1CAMvE1cHOVUuOkYuCkA4eHMJL3c8JWJffHIfDWIAGEA9Y1UIJURTOUMccUMELUIFIlc=";
+//        byDividingDataToBlocks(data);
+        byIndex(data);
+    }
+
+    private static void byIndex(String data) {
+        List<String> symbols = getSymbols(data);
+        System.out.println("matches");
+        int imax = 0;
+        int max = 0;
+        for (int i = 1; i < 10; i++) {
+            int matches = checkMatches(shift(symbols, i), symbols);
+            if(max < matches) {
+                max = matches;
+                imax = i;
+            }
+        }
+        System.out.println(imax + " | " + max);
+
+        List<Map<String,String>> maps = new ArrayList<>();
+        for (int i = 0; i < imax; i++) {
+            StringBuilder flat = new StringBuilder();
+            for (int j = 0; j < symbols.size(); j++) {
+                if(j % 4 == i) {
+                    flat.append(symbols.get(j));
+                }
+            }
+            FrequencyTable frequencyTable = new FrequencyTable(flat.toString());
+            String mostFrequented = frequencyTable.mostFrequented();
+            System.out.println(i);
+            if(i ==3) {
+                tryManual(flat.toString(), mostFrequented);
+            }
+//            maps.add(tryXor(mostFrequented, flat.toString()));
+        }
+//        joinMaps(maps);
+//        System.out.println(countMax);
+//        results.stream().distinct().forEach(r -> {
+//            System.out.println();
+//            System.out.println();
+//            System.out.println(r);
+//        });
+    }
+
+    private static void tryManual(String flat, String mostFrequented) {
+        alphabet.stream()
+                .map(s -> xor(mostFrequented, s))
+                .filter(key -> isNormalText(List.of(key), 0))
+                .forEach(key -> {
+                    String collect = getSymbols(flat)
+                            .stream()
+                            .map(x -> xor(key, x))
+                            .collect(Collectors.joining());
+//                    if (isNormalText(getSymbols(collect), 150)) {
+                        System.out.println(collect);
+                        System.out.println("---" + key + "---" + xor(mostFrequented, key));
+//                    }
+                });
+    }
+
+    private static void joinMaps(List<Map<String, String>> maps) {
+        List<Map.Entry<String, String>> first = maps.get(0).entrySet().stream().toList();
+//        List<Map.Entry<String, String>> second = maps.get(1).entrySet().stream().toList();
+        List<Map.Entry<String, String>> third = maps.get(2).entrySet().stream().toList();
+        List<Map.Entry<String, String>> fourth = maps.get(3).entrySet().stream().toList();
+        for (int i = 0; i < first.size(); i++) {
+//            for (int j = 0; j < second.size(); j++) {
+                for (int k = 0; k < third.size(); k++) {
+                    for (int x = 0; x < fourth.size(); x++) {
+                        Map.Entry<String, String> e1 = first.get(i);
+//                        Map.Entry<String, String> e2 = second.get(i);
+                        Map.Entry<String, String> e3 = third.get(i);
+                        Map.Entry<String, String> e4 = first.get(i);
+                        String result = e1.getKey()
+//                                + e2.getKey()
+                                + e3.getKey() + e4.getKey();
+                        result += "\n" + e1;
+//                        result += "\n" + e2;
+                        result += "\n" + e3;
+                        result += "\n" + e4;
+                        if(isNormalText(getSymbols(result), 450)) {
+                            results.add(result);
+                        }
+                    }
+                }
+            }
+//        }
+
+    }
+
+    private static HashMap<String, String> tryXor(String mostFrequented, String flat) {
+        HashMap<String, String> map = new HashMap<>();
+        allSymbols
+                .forEach(c -> {
+                    String key = xor(c, mostFrequented);
+                    List<String> symbols = getSymbols(flat);
+
+                    if (isNormalText(symbols, 150)) {
+                        map.put(c, symbols.stream()
+                                .map(s -> xor(s, key))
+                                .collect(Collectors.joining()));
+                    }
+                });
+        return map;
+    }
+
+    private static boolean isNormalText(List<String> symbols, int i) {
+        long count = symbols.stream().filter(symbol -> alphabet.contains(symbol)).count();
+        if(count > countMax) {
+            countMax = (int) count;
+        }
+        return count > i;
+    }
+
+    private static int checkMatches(List<String> shifted, List<String> symbols) {
+        int count = 0;
+        for (int i = 0; i < shifted.size(); i++) {
+            if (shifted.get(i).equals(symbols.get(i))) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static List<String> shift(List<String> symbols, int n) {
+        List<String> result = new ArrayList<>(symbols);
+        for (int i = 0; i < n; i++) {
+            String remove = result.remove(result.size() - 1);
+            result.add(0, remove);
+        }
+        return result;
+    }
+
+    private static void byDividingDataToBlocks(String data) {
         double max = 0.0;
         double heightMax = 1;
         for (int height = 1; height < 8; height++) {
@@ -128,7 +269,7 @@ public class App {
         List<String> elements = getSymbols(d);
 
         Map<String, String> toReplace = new HashMap<>();
-        for (String s : alphabet) {
+        for (String s : allSymbols) {
             String xor = xor(s, key);
             System.out.println(xor + " " + s);
             try {
