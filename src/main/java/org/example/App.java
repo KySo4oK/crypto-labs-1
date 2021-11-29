@@ -7,15 +7,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static java.lang.String.valueOf;
 
 public class App {
+    public static final int MAX_VALUE_FOR_KEY = 100;
     static List<String> allSymbols = getAllSymbols();
-    static List<String> alphabet = getResultSymbols();
-    static List<String> results = new ArrayList<>();
-
-    private static List<String> getResultSymbols() {
-        return new ArrayList<>(getSymbols("abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
-    }
 
     public static List<String> getAllSymbols() {
         List<String> strings = IntStream.range(32, 128)
@@ -27,7 +25,7 @@ public class App {
     }
 
     public static void main(String[] args) throws DecoderException {
-        task1();
+//        task1();
         task2();
     }
 
@@ -38,87 +36,45 @@ public class App {
 
     private static void byIndex(String data) {
         List<String> symbols = getSymbols(data);
-        System.out.println("matches");
         int imax = 0;
         int max = 0;
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < MAX_VALUE_FOR_KEY; i++) {
             int matches = checkMatches(shift(symbols, i), symbols);
             if(max < matches) {
                 max = matches;
                 imax = i;
             }
         }
-        System.out.println(imax + " | " + max);
+        System.out.println("matches - " + imax + " | " + max);
 
-        List<Map<String,String>> maps = new ArrayList<>();
         for (int i = 0; i < imax; i++) {
             StringBuilder flat = new StringBuilder();
             for (int j = 0; j < symbols.size(); j++) {
-                if(j % 4 == i) {
+                if(j % max == i) {
                     flat.append(symbols.get(j));
                 }
             }
-            FrequencyTable frequencyTable = new FrequencyTable(flat.toString());
-            String mostFrequented = frequencyTable.mostFrequented();
-            maps.add(tryXor(mostFrequented, flat.toString()));
+            String flatStr = flat.toString();
+            FrequencyTable frequencyTable = new FrequencyTable(flatStr);
+
+            tryXorWithGuessingMostFrequented(frequencyTable, i);
         }
-        joinMaps(maps);
-        results.stream().distinct().forEach(r -> {
-            System.out.println();
-            System.out.println();
-            System.out.println(r);
-        });
+        trySolve(data, "goBfjEuiEjap", imax);
     }
 
-    private static void joinMaps(List<Map<String, String>> maps) {
-        List<Map.Entry<String, String>> first = maps.get(0).entrySet().stream().toList();
-        List<Map.Entry<String, String>> second = maps.get(1).entrySet().stream().toList();
-        List<Map.Entry<String, String>> third = maps.get(2).entrySet().stream().toList();
-        List<Map.Entry<String, String>> fourth = maps.get(3).entrySet().stream().toList();
-        for (int i = 0; i < first.size(); i++) {
-            for (int j = 0; j < second.size(); j++) {
-                for (int k = 0; k < third.size(); k++) {
-                    for (int x = 0; x < fourth.size(); x++) {
-                        Map.Entry<String, String> e1 = first.get(i);
-                        Map.Entry<String, String> e2 = second.get(i);
-                        Map.Entry<String, String> e3 = third.get(i);
-                        Map.Entry<String, String> e4 = first.get(i);
-                        String result = e1.getKey()
-                                + e2.getKey()
-                                + e3.getKey() + e4.getKey();
-                        result += "\n" + e1;
-                        result += "\n" + e2;
-                        result += "\n" + e3;
-                        result += "\n" + e4;
-                        if(isNormalText(getSymbols(result), 450)) {
-                            results.add(result);
-                        }
-                    }
-                }
-            }
+    private static void trySolve(String data, String key, int imax) {
+        System.out.println();
+        for (int i = 0; i < data.length(); i++) {
+            System.out.print(xor(valueOf(key.charAt(i % imax)), valueOf(data.charAt(i))));
         }
-
     }
 
-    private static HashMap<String, String> tryXor(String mostFrequented, String flat) {
-        HashMap<String, String> map = new HashMap<>();
-        allSymbols
-                .forEach(c -> {
-                    String key = xor(c, mostFrequented);
-                    List<String> symbols = getSymbols(flat);
-
-                    if (isNormalText(symbols, 150)) {
-                        map.put(c, symbols.stream()
-                                .map(s -> xor(s, key))
-                                .collect(Collectors.joining()));
-                    }
-                });
-        return map;
-    }
-
-    private static boolean isNormalText(List<String> symbols, int i) {
-        long count = symbols.stream().filter(symbol -> alphabet.contains(symbol)).count();
-        return count > i;
+    private static void tryXorWithGuessingMostFrequented(FrequencyTable table, int i) {
+        String mostFrequented = table.mostFrequented();
+        System.out.println(i + ": " + mostFrequented);
+        System.out.println();
+        Stream.of(" ", "t", "a", "i", "n", "o", "s", "h", "r", "d", "l", "u", "c", "m", "f", "w", "y", "g", "p", "b", "v", "k", "q", "j", "x", "z")
+                        .forEach(s -> System.out.println(xor(mostFrequented, s) + "(" + s + ")"));
     }
 
     private static int checkMatches(List<String> shifted, List<String> symbols) {
